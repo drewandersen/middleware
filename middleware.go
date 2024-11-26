@@ -10,11 +10,13 @@ func LogError(w http.ResponseWriter, err error, message string) {
 	log.Printf("error: %s: %v\n", message, err)
 }
 
+var logtmpl = "method: %s, proto: %s, path: %s, remote_addr: %s, host: %s, status: %d\n"
+
 func HandleAccessLogs(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sw := statusWriter{ResponseWriter: w}
 		next.ServeHTTP(&sw, r)
-		log.Printf("method: %s, proto: %s, path: %s, remote_addr: %s, status: %d\n", r.Method, r.URL.Path, r.Proto, r.RemoteAddr, sw.status)
+		log.Printf(logtmpl, r.Method, r.URL.Path, r.Proto, r.RemoteAddr, r.Host, sw.status)
 	}
 }
 
@@ -22,7 +24,7 @@ func AccessLogsHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sw := statusWriter{ResponseWriter: w}
 		next.ServeHTTP(&sw, r)
-		log.Printf("method: %s, proto: %s, path: %s, remote_addr: %s, status: %d\n", r.Method, r.URL.Path, r.Proto, r.RemoteAddr, sw.status)
+		log.Printf(logtmpl, r.Method, r.URL.Path, r.Proto, r.RemoteAddr, r.Host, sw.status)
 	})
 }
 
